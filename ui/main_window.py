@@ -30,13 +30,19 @@ class MainWindow(ctk.CTk):
 
         self.btn_cut = ctk.CTkButton(self, text="Cortar Vídeo", command=self.cut_video)
         self.btn_cut.pack(pady=20)
+        
+        self.switch_normalize = ctk.CTkSwitch(self, text="Modo compatível (normalizar antes)")
+        self.switch_normalize.pack(pady=5)
 
     def select_file(self):
         self.input_path = filedialog.askopenfilename()
         messagebox.showinfo("Arquivo", f"Selecionado:\n{self.input_path}")
 
     def cut_video(self):
-        video_processado = normalizar_video(self.input_path)
+        if self.switch_normalize.get():
+            video_processado = normalizar_video(self.input_path)
+        else:
+            video_processado = self.input_path
 
         if not self.input_path:
             messagebox.showerror("Erro", "Selecione um vídeo")
@@ -73,5 +79,8 @@ class MainWindow(ctk.CTk):
             messagebox.showerror("Erro ao processar vídeo", str(e))
 
     def generate_output_path(self):
-        base, ext = os.path.splitext(self.input_path)
-        return f"{base}_corte{ext}"
+        os.makedirs("videos/cuts", exist_ok=True)
+        
+        filename = os.path.basename(self.input_path)
+        base_name = os.path.splitext(filename)[0]
+        return f"videos/cuts/{base_name}_corte.mp4"

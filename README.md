@@ -124,3 +124,20 @@ evitando reprocessamento.
 
 - Arquivos normalizados são armazenados em `videos/normalized/`
 - O sistema evita reprocessamento de vídeos já normalizados
+
+## 16.Modos de operação
+
+O sistema possui dois modos:
+
+- Modo rápido: realiza apenas o corte direto
+- Modo compatível: normaliza o vídeo antes do corte
+
+O modo compatível é recomendado para vídeos com problemas de codec ou origem diversa.
+
+## Versão 1.2
+
+- Implementação de modos de operação:
+  - Modo rápido (corte direto)
+  - Modo compatível (normalização + corte)
+- Organização dos arquivos de saída em `videos/cuts`
+- Melhor controle de desempenho pelo usuário
