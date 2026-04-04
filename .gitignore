@@ -12,3 +12,12 @@ build/
 *.exe
 
 .vscode/
+
+# vídeos gerados
+videos/
+
+# arquivos grandes
+*.mp4
+*.mkv
+*.avi
+*.mov
