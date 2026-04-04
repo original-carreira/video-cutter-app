@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 from services.video_cutter import cortar_video
+from services.video_normalizer import normalizar_video
 from utils.time_utils import parse_tempo
 import os
 
@@ -35,6 +36,7 @@ class MainWindow(ctk.CTk):
         messagebox.showinfo("Arquivo", f"Selecionado:\n{self.input_path}")
 
     def cut_video(self):
+        video_processado = normalizar_video(self.input_path)
 
         if not self.input_path:
             messagebox.showerror("Erro", "Selecione um vídeo")
@@ -59,7 +61,7 @@ class MainWindow(ctk.CTk):
 
         try:
             cortar_video(
-                self.input_path,
+                video_processado,
                 start,
                 end,
                 output_path,

@@ -85,3 +85,42 @@ Essa validação evita erros no processamento com FFmpeg.
 - Uso de -map 0:v:0 e -map 0:a:0 para evitar streams incompatíveis
 - Uso de -y para evitar bloqueio ao sobrescrever arquivos
 - Remoção de -hwaccel por questões de compatibilidade
+
+## 12.Versionamento
+
+O projeto utiliza Git com versionamento semântico.
+
+Versões:
+
+- v1.0: corte funcional com FFmpeg
+- próximas versões incluirão normalização e integração
+
+## 13.Normalização de vídeo
+
+Foi implementado um processo de normalização que converte qualquer vídeo para:
+
+- MP4
+- H264 (vídeo)
+- AAC (áudio)
+
+Isso garante compatibilidade com o sistema de corte e com o PowerPoint.
+
+## 14.Normalização inteligente
+
+- Evita reprocessamento de vídeos já normalizados
+- Mantém padrão MP4 (H264 + AAC)
+- Aplica otimizações de reprodução (faststart)
+- Normaliza áudio automaticamente (loudnorm)
+
+## 15.Pipeline de processamento
+
+O sistema gera dois arquivos:
+
+1. Vídeo normalizado (completo)
+2. Vídeo recortado
+
+Isso permite reutilização do vídeo normalizado para múltiplos cortes,
+evitando reprocessamento.
+
+- Arquivos normalizados são armazenados em `videos/normalized/`
+- O sistema evita reprocessamento de vídeos já normalizados
