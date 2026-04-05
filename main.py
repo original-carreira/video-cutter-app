@@ -48,7 +48,6 @@ def setup_logging():
         format="%(asctime)s - %(levelname)s - %(message)s"
     )
     
-    
 # =============================
 # Execução principal
 # =============================
