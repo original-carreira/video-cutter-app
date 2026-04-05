@@ -19,8 +19,12 @@ class MainWindow(ctk.CTk):
         # Configurações da Janela
         # =============================
         self.title("Video Cutter Pro")
-        self.geometry("550x500")
-        
+        self.geometry("650x600")
+        self.minsize(600, 600)
+        self.resizable(False, False)
+
+        self.center_window()
+
         # =============================
         # Variáveis de Estado
         # =============================
@@ -31,11 +35,28 @@ class MainWindow(ctk.CTk):
         self.setup_ui()
 
     # =============================
+    # Centralização da Janela
+    # =============================
+    def center_window(self):
+        self.update_idletasks()
+
+        width = self.winfo_width()
+        height = self.winfo_height()
+
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+
+        x = int((screen_width / 2) - (width / 2))
+        y = int((screen_height / 2) - (height / 2))
+
+        self.geometry(f"{width}x{height}+{x}+{y}")
+
+    # =============================
     # Construção da Interface
     # =============================
     def setup_ui(self):
         """Inicializa os componentes da interface"""
-        
+
         # Título
         self.label_title = ctk.CTkLabel(
             self,
@@ -44,7 +65,7 @@ class MainWindow(ctk.CTk):
         )
         self.label_title.pack(pady=(20, 10))
 
-        # Botão selecionar vídeo
+        # Botão de seleção de video
         self.btn_select = ctk.CTkButton(
             self,
             text="Selecionar Vídeo",
@@ -54,7 +75,7 @@ class MainWindow(ctk.CTk):
         )
         self.btn_select.pack(pady=10)
 
-        # Nome do arquivo
+        # Label para mostrar nome do arquivo selecionado
         self.label_filename = ctk.CTkLabel(
             self,
             text="Nenhum arquivo selecionado",
@@ -65,25 +86,17 @@ class MainWindow(ctk.CTk):
         )
         self.label_filename.pack(pady=(0, 10))
 
-        # Inputs de tempo
+        # Frame para entradas de tempo
         self.time_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.time_frame.pack(pady=5)
 
-        self.entry_start = ctk.CTkEntry(
-            self.time_frame,
-            placeholder_text="Início (HH:MM:SS)",
-            width=150
-        )
+        self.entry_start = ctk.CTkEntry(self.time_frame, placeholder_text="Início (HH:MM:SS)", width=150)
         self.entry_start.pack(side="left", padx=5)
 
-        self.entry_end = ctk.CTkEntry(
-            self.time_frame,
-            placeholder_text="Fim (HH:MM:SS)",
-            width=150
-        )
+        self.entry_end = ctk.CTkEntry(self.time_frame, placeholder_text="Fim (HH:MM:SS)", width=150)
         self.entry_end.pack(side="left", padx=5)
 
-        # Opções
+        # Switch para reencode
         self.switch_reencode = ctk.CTkSwitch(self, text="Modo compatível (reencode pesado)")
         self.switch_reencode.pack(pady=5)
 
@@ -95,30 +108,21 @@ class MainWindow(ctk.CTk):
         self.progress_bar.pack(pady=10, padx=20)
         self.progress_bar.stop()
 
-        # Lista de cortes
+        # Listbox para mostrar cortes adicionados
         self.listbox_cuts = ctk.CTkTextbox(self, height=100)
         self.listbox_cuts.pack(pady=5, padx=20, fill="x")
 
-        # Botão adicionar corte
-        self.btn_add_cut = ctk.CTkButton(
-            self,
-            text="Adicionar Corte",
-            command=self.add_cut
-        )
+        # Botões de adicionar corte e limpar lista
+        self.btn_add_cut = ctk.CTkButton(self, text="Adicionar Corte", command=self.add_cut)
         self.btn_add_cut.pack(pady=5)
 
-        # Botão limpar lista
-        self.btn_clear = ctk.CTkButton(
-            self,
-            text="Limpar Lista",
-            command=self.clear_cuts
-        )
+        self.btn_clear = ctk.CTkButton(self, text="Limpar Lista", command=self.clear_cuts)
         self.btn_clear.pack(pady=5)
 
-        # Botão iniciar corte
+        # Botão de executar cortes
         self.btn_cut = ctk.CTkButton(
             self,
-            text="Iniciar Corte",
+            text="Executar Cortes",
             height=40,
             font=("Arial", 14, "bold"),
             fg_color="#2fa572",
@@ -127,7 +131,7 @@ class MainWindow(ctk.CTk):
         )
         self.btn_cut.pack(pady=20)
 
-        # Status
+        # Label para status
         self.label_status = ctk.CTkLabel(self, text="", text_color="#3b8ed0")
         self.label_status.pack(pady=5)
 
@@ -168,7 +172,7 @@ class MainWindow(ctk.CTk):
             messagebox.showerror("Erro", str(e))
             return
 
-        # Evita duplicados
+        # Verificar cortes duplicados
         if (start, end) in self.cuts:
             messagebox.showwarning("Aviso", "Corte já adicionado")
             return
@@ -184,7 +188,7 @@ class MainWindow(ctk.CTk):
         self.listbox_cuts.delete("1.0", "end")
 
     # =============================
-    # Geração de nome de saída
+    # Gerar Nome de saída
     # =============================
     def generate_output_path_multi(self, index):
         folder = "videos/cuts"
@@ -214,6 +218,8 @@ class MainWindow(ctk.CTk):
         self.toggle_ui_state("disabled")
         self.progress_bar.start()
 
+        self.label_status.configure(text=f"Iniciando {len(self.cuts)} corte(s)...")
+
         reencode = self.switch_reencode.get()
         normalize = self.switch_normalize.get()
 
@@ -221,16 +227,19 @@ class MainWindow(ctk.CTk):
             try:
                 video = normalizar_video(self.input_path) if normalize else self.input_path
 
+                output = None  # segurança
+
                 for i, (start, end) in enumerate(self.cuts, start=1):
+
+                    # Atualizar status na UI (thread-safe)
+                    self.after(0, lambda idx=i, s=start, e=end:
+                               self.label_status.configure(
+                                   text=f"Cortando {idx}/{len(self.cuts)}: {s} → {e}"
+                               ))
+
                     output = self.generate_output_path_multi(i)
 
-                    cortar_video(
-                        video,
-                        start,
-                        end,
-                        output,
-                        reencode=reencode
-                    )
+                    cortar_video(video, start, end, output, reencode=reencode)
 
                 self.output_last_path = output
                 self.after(0, self.finalizar_sucesso)
@@ -246,30 +255,35 @@ class MainWindow(ctk.CTk):
     def toggle_ui_state(self, state):
         self.btn_cut.configure(state=state)
         self.btn_select.configure(state=state)
+        self.btn_add_cut.configure(state=state)
+        self.btn_clear.configure(state=state)
+        self.entry_start.configure(state=state)
+        self.entry_end.configure(state=state)
 
     # =============================
-    # Finalização sucesso
+    # Final sucesso
     # =============================
     def finalizar_sucesso(self):
         self.progress_bar.stop()
         self.toggle_ui_state("normal")
 
-        self.label_status.configure(text="Finalizado!", text_color="#2fa572")
+        self.label_status.configure(text="Processamento concluído", text_color="#2fa572")
+
+        if messagebox.askyesno("Sucesso!", "Deseja abrir a pasta?"):
+            self.open_file_explorer()
 
         self.clear_cuts()
 
-        if messagebox.askyesno("Sucesso", "Deseja abrir a pasta?"):
-            self.open_file_explorer()
-
     # =============================
-    # Finalização erro
+    # Final erro
     # =============================
     def finalizar_erro(self, erro):
         self.progress_bar.stop()
         self.toggle_ui_state("normal")
 
         self.label_status.configure(text="Erro no processamento", text_color="red")
-        messagebox.showerror("Erro", "Falha ao processar vídeo")
+
+        messagebox.showerror("Erro crítico!", "Falha ao processar vídeo")
         print("Erro técnico:", erro)
 
     # =============================
