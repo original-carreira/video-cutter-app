@@ -3,11 +3,13 @@ from tkinter import filedialog, messagebox
 from services.video_cutter import cortar_video
 from services.video_normalizer import normalizar_video
 from utils.time_utils import parse_tempo
+from services.obs_controller import OBSController
 import threading
 import os
 import platform
 import subprocess
 import logging
+import time
 
 
 class MainWindow(ctk.CTk):
@@ -90,6 +92,35 @@ class MainWindow(ctk.CTk):
         self.label_status = ctk.CTkLabel(self, text="", text_color="#3b8ed0")
         self.label_status.pack(pady=5)
 
+        self.btn_record = ctk.CTkButton(
+            self,text="Gravar Trecho (OBS)",
+            fg_color="#d97706",
+            hover_color="#b45309",
+            command=self.record_with_obs
+            )
+        self.btn_record.pack(pady=5)
+        
+    def record_with_obs(self):
+        obs = OBSController(password="Sg@273220")
+        
+        try:
+            obs.connect()
+            
+            self.label_status.configure(text="Gravando... Clique novamente para parar.", text_color="#d97706")
+            
+            obs.start_recording()
+            
+            time.sleep(10)  # Grava por 10 segundos (ajuste conforme necessário)
+            obs.stop_recording()
+            obs.disconnect()
+            
+            self.label_status.configure(text="Gravação concluída!", text_color="#2fa572")
+        except Exception as e:
+            messagebox.showerror("Erro OBS", f"Falha na gravação com OBS:\n{str(e)}")
+            
+        
+    
+    
     def select_file(self):
         path = filedialog.askopenfilename(filetypes=[("Vídeos", "*.mp4 *.mkv *.avi *.mov")])
         if path:
