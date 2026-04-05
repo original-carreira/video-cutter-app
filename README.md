@@ -1,147 +1,216 @@
-# 🎬 Video Cutter App
+# 🎬 Video Cutter Pro
 
-## 1. Objetivo
-Aplicação para recorte de vídeos curtos (15–30s) para uso em apresentações.
+## 🚀 Objetivo
+Aplicação desktop para recorte de vídeos curtos (15–30s), ideal para uso em apresentações (ex: PowerPoint), com foco em simplicidade, velocidade e compatibilidade.
 
-## 2. Tecnologias
-- Python
-- FFmpeg
-- customtkinter
+---
 
-## 3. Estrutura
+## ✨ Funcionalidades
+*   **Corte de Vídeo:** Suporte a múltiplos intervalos por vídeo.
+*   **Modos de Operação:** 
+    *   *Modo Rápido (Stream Copy):* Sem perda de qualidade e instantâneo.
+    *   *Modo Compatível (Reencode):* Garante execução em qualquer player/PowerPoint.
+*   **Normalização Inteligente:** Conversão para MP4 (H264/AAC), ajuste de áudio (`loudnorm`) e uso de `faststart`.
+*   **Performance:** Execução assíncrona (Threading) para manter a interface fluida.
+*   **Interface Moderna:** Construída com `CustomTkinter`.
+*   **Gestão de Arquivos:** Geração automática de saídas e sistema de logs robusto (AppData).
 
-- ui → interface gráfica
-- services → regras de negócio
-- infra → execução do FFmpeg
-- utils → utilidades
+---
 
-## 4. Como executar
+## 📂 Estrutura do Projeto
+```text
+video_cutter_app/
+├── ui/          # Interface gráfica (CustomTkinter)
+├── services/    # Regras de negócio e orquestração
+├── infra/       # Execução de comandos (FFmpeg)
+├── utils/       # Funções auxiliares (tempo, etc)
+├── logs/        # Registros de depuração (Ambiente Dev)
+├── videos/      # Saídas de cortes e normalizados (Ignorado no Git)
+├── main.py      # Entry point da aplicação
+└── .gitignore   # Filtro de arquivos para Git
+
+
+---
+
+## 🖥️ Tecnologias
+
+* Python 3.11+
+* FFmpeg (Engine de processamento)
+* CustomTkinter (Interface UI)
+
+---
+## ▶️ Como executar
 
 1. Instalar FFmpeg
 2. Rodar:
 
+```bash
 python main.py
+```
 
-## 5. Observações
+---
 
-- O modo "copy" é mais rápido, mas pode falhar em alguns vídeos.
-- O modo "reencode" é mais compatível.
+## 🎯 Como usar
 
-## 6. Próximos passos
+1. Selecionar o vídeo
+2. Definir tempo inicial e final
+3. Adicionar cortes
+4. Executar cortes
 
-- Normalização de vídeos
-- Suporte a múltiplos formatos
-- Integração com calendário
+---
 
+## ⚠️ Observações
 
-## 7.Diferenças importantes no FFmpeg
+* O modo "copy" é mais rápido, mas pode falhar em alguns vídeos
+* O modo "reencode" é mais compatível
+
+---
+
+# 🧠 Documentação Técnica
+
+## Diferenças importantes no FFmpeg
 
 ### -ss antes vs depois do input
 
-- Antes do input → mais rápido, menos preciso
-- Depois do input → mais preciso, mais lento
+* Antes do input → mais rápido, menos preciso
+* Depois do input → mais preciso, mais lento
 
 ### copy vs reencode
 
-- copy → rápido, pode falhar em cortes exatos
-- reencode → mais lento, mais compatível
+* copy → rápido, pode falhar em cortes exatos
+* reencode → mais lento, mais compatível
 
 ### -map 0
 
 Inclui todas as trilhas do vídeo (áudio, legenda, etc.)
 
-## 8.Tratamento de tempo
+---
+
+## Tratamento de tempo
 
 O sistema aceita:
 
-- HH:MM:SS
-- HH:MM:SS.ms
-- HH:MM:SS,ms
+* HH:MM:SS
+* HH:MM:SS.ms
+* HH:MM:SS,ms
 
 O tempo é convertido internamente para segundos (float), permitindo:
 
-- Comparações precisas
-- Validação de intervalo
-- Futuras operações (ex: múltiplos cortes)
+* Comparações precisas
+* Validação de intervalo
+* Futuras operações (ex: múltiplos cortes)
 
-## 9.Validação de entrada
+---
+
+## Validação de entrada
 
 O sistema valida:
 
-- Formato do tempo (HH:MM:SS)
-- Valores válidos (minutos e segundos)
-- Ordem lógica (tempo final maior que inicial)
+* Formato do tempo
+* Valores válidos
+* Ordem lógica (tempo final maior que inicial)
 
-Essa validação evita erros no processamento com FFmpeg.
+---
 
-## 10.Tratamento de streams
+## Tratamento de streams
 
-- Uso de -map 0:v:0 para vídeo
-- Uso de -map 0:a:0? para áudio opcional
-- Evita erro em vídeos sem faixa de áudio
+* Uso de -map 0:v:0 para vídeo
+* Uso de -map 0:a:0? para áudio opcional
+* Evita erro em vídeos sem faixa de áudio
 
-## 11.Ajustes no comando FFmpeg
+---
 
-- Uso de -map 0:v:0 e -map 0:a:0 para evitar streams incompatíveis
-- Uso de -y para evitar bloqueio ao sobrescrever arquivos
-- Remoção de -hwaccel por questões de compatibilidade
+## Ajustes no comando FFmpeg
 
-## 12.Versionamento
+* Uso de -map 0:v:0 e -map 0:a:0
+* Uso de -y para sobrescrita automática
+* Remoção de -hwaccel por compatibilidade
+
+---
+
+## Normalização de vídeo
+
+* Conversão para MP4 (H264 + AAC)
+* Compatibilidade com PowerPoint
+* Uso de `loudnorm` para áudio
+
+---
+
+## Normalização inteligente
+
+* Evita reprocessamento
+* Mantém padrão MP4
+* Usa `faststart`
+* Normaliza áudio automaticamente
+
+---
+
+## Pipeline de processamento
+
+O sistema gera:
+
+1. Vídeo normalizado
+2. Vídeo recortado
+
+Vantagens:
+
+* Reutilização do vídeo
+* Melhor desempenho
+
+Arquivos:
+
+* `videos/normalized/`
+* `videos/cuts/`
+
+---
+
+## Modos de operação
+
+* Modo rápido → corte direto
+* Modo compatível → normalização + corte
+
+---
+
+## Execução assíncrona
+
+Processamento em thread separada:
+
+* Interface não trava
+* Melhor experiência do usuário
+
+---
+## Logs da Aplicação
+
+Os logs são armazenados em:
+
+Windows:
+%APPDATA%/VideoCutter/logs/app.log
+## Versionamento
 
 O projeto utiliza Git com versionamento semântico.
 
-Versões:
+### Versões
 
-- v1.0: corte funcional com FFmpeg
-- próximas versões incluirão normalização e integração
+* v1.0 → corte básico
+* v1.2 → modos de operação
+* v1.4 → múltiplos cortes + melhorias de UX
 
-## 13.Normalização de vídeo
+---
 
-Foi implementado um processo de normalização que converte qualquer vídeo para:
+## Próximos passos
 
-- MP4
-- H264 (vídeo)
-- AAC (áudio)
+* Exportação inteligente (nome baseado no tempo)
+* Embutir FFmpeg
+* Barra de progresso real
+* Integração com calendário
 
-Isso garante compatibilidade com o sistema de corte e com o PowerPoint.
+---
 
-## 14.Normalização inteligente
+## 📌 Observação final
 
-- Evita reprocessamento de vídeos já normalizados
-- Mantém padrão MP4 (H264 + AAC)
-- Aplica otimizações de reprodução (faststart)
-- Normaliza áudio automaticamente (loudnorm)
+Este projeto foi desenvolvido com foco em aprendizado prático e aplicação real, abordando conceitos de:
 
-## 15.Pipeline de processamento
-
-O sistema gera dois arquivos:
-
-1. Vídeo normalizado (completo)
-2. Vídeo recortado
-
-Isso permite reutilização do vídeo normalizado para múltiplos cortes,
-evitando reprocessamento.
-
-- Arquivos normalizados são armazenados em `videos/normalized/`
-- O sistema evita reprocessamento de vídeos já normalizados
-
-## 16.Modos de operação
-
-O sistema possui dois modos:
-
-- Modo rápido: realiza apenas o corte direto
-- Modo compatível: normaliza o vídeo antes do corte
-
-O modo compatível é recomendado para vídeos com problemas de codec ou origem diversa.
-
-## Versão 1.2
-
-- Implementação de modos de operação:
-  - Modo rápido (corte direto)
-  - Modo compatível (normalização + corte)
-- Organização dos arquivos de saída em `videos/cuts`
-- Melhor controle de desempenho pelo usuário
-
-## 17.Execução assíncrona
-
-O processamento de vídeo é executado em thread separada, garantindo que a interface permaneça responsiva durante operações longas.
+* Arquitetura em camadas
+* Integração com ferramentas externas
+* UX em aplicações desktop
+* Processamento assíncrono

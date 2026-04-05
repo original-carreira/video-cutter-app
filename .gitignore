@@ -1,23 +1,41 @@
+# Byte-compiled / arquivos compilados
 __pycache__/
+*.py[cod]
+*$py.class
 *.pyc
 
+# Ambientes Virtuais e Configurações
+.venv/
+venv/
+env/
+.env
+
+# IDEs e Editores
+.vscode/
+.idea/
+*.swp
+
+# Logs e Dados do App
 logs/
 *.log
 
-.env
-
-dist/
-build/
-
-*.exe
-
-.vscode/
-
-# vídeos gerados
+# Pastas de Saída e Vídeos Gerados
 videos/
+videos/cuts/
+videos/normalized/
 
-# arquivos grandes
+# Arquivos de Vídeo e Binários Grandes
 *.mp4
 *.mkv
 *.avi
 *.mov
+*.exe
+
+# Empacotamento (PyInstaller)
+dist/
+build/
+*.spec
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db
