@@ -1,14 +1,34 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 from services.obs_controller import OBSController
+from datetime import datetime
 import threading
 import os
+import time
 
 # Certifique-se de que os serviços abaixo existam no seu projeto
 # from services.video_cutter import cortar_video
 # from services.video_normalizer import normalizar_video
 # from utils.time_utils import parse_tempo
 # from services.obs_controller import OBSController
+
+
+# =============================
+# 🔥 FUNÇÃO UTILITÁRIA (OBS)
+# =============================
+def get_latest_video(folder):
+    try:
+        files = [
+            os.path.join(folder, f) for f in os.listdir(folder)
+            if os.path.isfile(os.path.join(folder, f))
+        ]
+        
+        if not files:
+            return None
+        
+        return max(files, key=os.path.getctime)
+    except Exception as e:
+        return None
 
 class MainWindow(ctk.CTk):
     def __init__(self):
@@ -38,7 +58,7 @@ class MainWindow(ctk.CTk):
         self.btn_select = ctk.CTkButton(self, text="📁 Selecionar Vídeo", command=self.select_file)
         self.btn_select.grid(row=1, pady=5)
         
-        self.label_file = ctk.CTkLabel(self, text="Nenhum arquivo selecionado", text_color="gray")
+        self.label_file = ctk.CTkLabel(self, text="Nenhum arquivo selecionado", text_color="#1f2937")
         self.label_file.grid(row=2, pady=2)
 
         # Inputs de Tempo
@@ -135,9 +155,12 @@ class MainWindow(ctk.CTk):
 
             video_src = normalizar_video(self.input_path) if self.switch_normalize.get() else self.input_path
 
+            base_name = os.path.splitext(os.path.basename(self.input_path))[0]
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
             for i, (start, end) in enumerate(self.cuts, 1):
                 self.update_status(f"Processando corte {i}/{len(self.cuts)}", i/len(self.cuts))
-                out = os.path.join(output_dir, f"corte_{i}.mp4")
+                out = os.path.join(output_dir, f"{base_name}_cut_{i}_{timestamp}.mp4")
                 cortar_video(video_src, start, end, out, reencode=self.switch_reencode.get())
 
             self.after(0, self.finalizar_sucesso)
@@ -192,6 +215,27 @@ class MainWindow(ctk.CTk):
                 self.after(0, lambda: self.btn_obs_stop.configure(state="disabled"))
                 
                 self.update_status("Gravação OBS parada", 1)
+                
+                # =============================
+                # 🔥 AUTO IMPORT DO VÍDEO
+                # =============================
+                time.sleep(1.5)
+                
+                latest_video = get_latest_video(os.path.join(os.path.expanduser("~"), "Videos"))
+                
+                if latest_video:
+                    self.input_path = latest_video
+                    
+                    self.after(0, lambda: self.label_file.configure(
+                        text=os.path.basename(latest_video), text_color="#1f2937"
+                        ))
+                    
+                    self.update_status("Vídeo importado do OBS!", 1)
+                    
+                else:
+                    self.update_status("Gravação finalizada, mas não foi possível encontrar o vídeo.", 1)
+                    
+                
                 
             except Exception as e:
                 error_msg = str(e)
