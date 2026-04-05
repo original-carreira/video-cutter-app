@@ -1,24 +1,21 @@
-from obswebsocket import obsws, requests
-
-
+from obsws_python import ReqClient
 class OBSController:
 
-    def __init__(self, host="localhost", port=4455, password="123456"):
+    def __init__(self, host="localhost", port=4455, password="Sg@273220"):
         self.host = host
         self.port = port
         self.password = password
-        self.ws = None
+        self.client = None
 
     def connect(self):
-        self.ws = obsws(self.host, self.port, self.password)
-        self.ws.connect()
+        self.client = ReqClient(host=self.host, port=self.port, password=self.password)
 
     def disconnect(self):
-        if self.ws:
-            self.ws.disconnect()
+        if self.client:
+            self.client.disconnect()
 
     def start_recording(self):
-        self.ws.call(requests.StartRecording())
+        self.client.start_record()
 
     def stop_recording(self):
-        self.ws.call(requests.StopRecording())
+        self.client.stop_record()
