@@ -141,3 +141,7 @@ O modo compatível é recomendado para vídeos com problemas de codec ou origem 
   - Modo compatível (normalização + corte)
 - Organização dos arquivos de saída em `videos/cuts`
 - Melhor controle de desempenho pelo usuário
+
+## 17.Execução assíncrona
+
+O processamento de vídeo é executado em thread separada, garantindo que a interface permaneça responsiva durante operações longas.
