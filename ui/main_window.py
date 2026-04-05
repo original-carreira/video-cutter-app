@@ -45,8 +45,10 @@ class MainWindow(ctk.CTk):
         self.label_filename = ctk.CTkLabel(
             self,
             text="Nenhum arquivo selecionado",
-            font=("Arial", 11),
-            text_color="gray"
+            font=("Arial", 12, "bold"),
+            text_color="#1f1f1f",  # quase preto (melhor leitura)
+            wraplength=400,
+            justify="center"
         )
         self.label_filename.pack(pady=(0, 10))
 
@@ -109,8 +111,9 @@ class MainWindow(ctk.CTk):
             nome_arq = os.path.basename(path)
 
             self.label_filename.configure(
-                text=f"Arquivo: {nome_arq}",
-                text_color="white"
+                text=f"Arquivo selecionado:\n{nome_arq}",
+                text_color="#2b2b2b",
+                font=("Arial", 12, "bold")
             )
 
             self.btn_select.configure(text="Trocar Vídeo")
