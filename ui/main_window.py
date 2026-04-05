@@ -15,24 +15,36 @@ class MainWindow(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        # =============================
         # Configurações da Janela
+        # =============================
         self.title("Video Cutter Pro")
         self.geometry("550x500")
         
+        # =============================
         # Variáveis de Estado
+        # =============================
         self.input_path = None
         self.output_last_path = None
+        self.cuts = []  # Lista para armazenar múltiplos cortes
 
         self.setup_ui()
 
+    # =============================
+    # Construção da Interface
+    # =============================
     def setup_ui(self):
         """Inicializa os componentes da interface"""
         
-        # Título Central
-        self.label_title = ctk.CTkLabel(self, text="Corte de Vídeo Inteligente", font=("Arial", 20, "bold"))
+        # Título
+        self.label_title = ctk.CTkLabel(
+            self,
+            text="Corte de Vídeo Inteligente",
+            font=("Arial", 20, "bold")
+        )
         self.label_title.pack(pady=(20, 10))
 
-        # Botão selecionar vídeo (Melhorado com feedback de nome)
+        # Botão selecionar vídeo
         self.btn_select = ctk.CTkButton(
             self,
             text="Selecionar Vídeo",
@@ -42,17 +54,18 @@ class MainWindow(ctk.CTk):
         )
         self.btn_select.pack(pady=10)
 
+        # Nome do arquivo
         self.label_filename = ctk.CTkLabel(
             self,
             text="Nenhum arquivo selecionado",
             font=("Arial", 12, "bold"),
-            text_color="#1f1f1f",  # quase preto (melhor leitura)
+            text_color="#1f1f1f",
             wraplength=400,
             justify="center"
         )
         self.label_filename.pack(pady=(0, 10))
 
-        # Container para os campos de tempo (Lado a lado)
+        # Inputs de tempo
         self.time_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.time_frame.pack(pady=5)
 
@@ -70,19 +83,39 @@ class MainWindow(ctk.CTk):
         )
         self.entry_end.pack(side="left", padx=5)
 
-        # Opções de Processamento
+        # Opções
         self.switch_reencode = ctk.CTkSwitch(self, text="Modo compatível (reencode pesado)")
         self.switch_reencode.pack(pady=5)
 
-        self.switch_normalize = ctk.CTkSwitch(self, text="Normalizar áudio/vídeo (pré-processamento)")
+        self.switch_normalize = ctk.CTkSwitch(self, text="Normalizar áudio/vídeo")
         self.switch_normalize.pack(pady=5)
 
-        # Barra de Progresso (Invisível por padrão)
-        self.progress_bar = ctk.CTkProgressBar(self, orientation="horizontal", mode="indeterminate")
+        # Barra de progresso
+        self.progress_bar = ctk.CTkProgressBar(self, mode="indeterminate")
         self.progress_bar.pack(pady=10, padx=20)
-        self.progress_bar.stop()  # set(0) removido (não necessário para modo indeterminate)
+        self.progress_bar.stop()
 
-        # Botão cortar
+        # Lista de cortes
+        self.listbox_cuts = ctk.CTkTextbox(self, height=100)
+        self.listbox_cuts.pack(pady=5, padx=20, fill="x")
+
+        # Botão adicionar corte
+        self.btn_add_cut = ctk.CTkButton(
+            self,
+            text="Adicionar Corte",
+            command=self.add_cut
+        )
+        self.btn_add_cut.pack(pady=5)
+
+        # Botão limpar lista
+        self.btn_clear = ctk.CTkButton(
+            self,
+            text="Limpar Lista",
+            command=self.clear_cuts
+        )
+        self.btn_clear.pack(pady=5)
+
+        # Botão iniciar corte
         self.btn_cut = ctk.CTkButton(
             self,
             text="Iniciar Corte",
@@ -94,61 +127,32 @@ class MainWindow(ctk.CTk):
         )
         self.btn_cut.pack(pady=20)
 
-        # Label status
+        # Status
         self.label_status = ctk.CTkLabel(self, text="", text_color="#3b8ed0")
         self.label_status.pack(pady=5)
 
     # =============================
-    # Selecionar arquivo
+    # Seleção de arquivo
     # =============================
     def select_file(self):
         path = filedialog.askopenfilename(
-            title="Selecione o vídeo",
-            filetypes=[("Arquivos de Vídeo", "*.mp4 *.mkv *.avi *.mov")]
+            filetypes=[("Vídeos", "*.mp4 *.mkv *.avi *.mov")]
         )
         if path:
             self.input_path = path
-            nome_arq = os.path.basename(path)
+            nome = os.path.basename(path)
 
             self.label_filename.configure(
-                text=f"Arquivo selecionado:\n{nome_arq}",
-                text_color="#2b2b2b",
-                font=("Arial", 12, "bold")
+                text=f"Arquivo selecionado:\n{nome}",
+                text_color="#2b2b2b"
             )
 
-            self.btn_select.configure(text="Trocar Vídeo")
-
-            # 🔹 Feedback adicional
-            self.label_status.configure(text="Arquivo carregado. Pronto para cortar.", text_color="#3b8ed0")
+            self.label_status.configure(text="Arquivo pronto para corte.")
 
     # =============================
-    # Geração do caminho de saída (Melhorado: Evita sobrescrita)
+    # Adicionar corte
     # =============================
-    def generate_output_path(self):
-        folder = "videos/cuts"
-        os.makedirs(folder, exist_ok=True)
-
-        filename = os.path.basename(self.input_path)
-        name, ext = os.path.splitext(filename)
-        
-        # Adiciona timestamp para não perder cortes anteriores
-        timestamp = datetime.datetime.now().strftime("%H%M%S")
-        return os.path.join(folder, f"{name}_corte_{timestamp}{ext}")
-
-    # =============================
-    # Função principal (Processamento em Thread)
-    # =============================
-    def cut_video(self):
-
-        # Evita múltiplos cliques
-        if self.btn_cut.cget("state") == "disabled":
-            return
-
-        # Validação de entrada
-        if not self.input_path:
-            messagebox.showerror("Erro", "Por favor, selecione um vídeo primeiro!")
-            return
-
+    def add_cut(self):
         start = self.entry_start.get()
         end = self.entry_end.get()
 
@@ -157,113 +161,128 @@ class MainWindow(ctk.CTk):
             end_sec = parse_tempo(end)
 
             if end_sec <= start_sec:
-                messagebox.showerror("Erro", "O tempo final deve ser maior que o inicial!")
+                messagebox.showerror("Erro", "Tempo final deve ser maior")
                 return
 
         except ValueError as e:
-            messagebox.showerror("Erro", f"Formato de tempo inválido: {e}")
+            messagebox.showerror("Erro", str(e))
             return
 
-        # Bloqueia UI e ativa progresso
+        # Evita duplicados
+        if (start, end) in self.cuts:
+            messagebox.showwarning("Aviso", "Corte já adicionado")
+            return
+
+        self.cuts.append((start, end))
+        self.listbox_cuts.insert("end", f"{start} → {end}\n")
+
+    # =============================
+    # Limpar cortes
+    # =============================
+    def clear_cuts(self):
+        self.cuts.clear()
+        self.listbox_cuts.delete("1.0", "end")
+
+    # =============================
+    # Geração de nome de saída
+    # =============================
+    def generate_output_path_multi(self, index):
+        folder = "videos/cuts"
+        os.makedirs(folder, exist_ok=True)
+
+        filename = os.path.basename(self.input_path)
+        name, ext = os.path.splitext(filename)
+
+        return os.path.join(folder, f"{name}_corte_{index}{ext}")
+
+    # =============================
+    # Execução do corte (Thread)
+    # =============================
+    def cut_video(self):
+
+        if self.btn_cut.cget("state") == "disabled":
+            return
+
+        if not self.input_path:
+            messagebox.showerror("Erro", "Selecione um vídeo!")
+            return
+
+        if not self.cuts:
+            messagebox.showerror("Erro", "Adicione pelo menos um corte!")
+            return
+
         self.toggle_ui_state("disabled")
-        self.progress_bar.configure(indeterminate_speed=1.5)
         self.progress_bar.start()
 
-        # 🔹 Mensagem diferenciada se normalização estiver ativa
-        if self.switch_normalize.get():
-            self.label_status.configure(
-                text="Normalizando vídeo... (etapa mais demorada)",
-                text_color="#3b8ed0"
-            )
-        else:
-            self.label_status.configure(
-                text="Processando corte...",
-                text_color="#3b8ed0"
-            )
-
-        # Captura estados dos switches
         reencode = self.switch_reencode.get()
         normalize = self.switch_normalize.get()
 
-        def process_thread():
+        def process():
             try:
-                # Normalização opcional
-                video_para_cortar = (
-                    normalizar_video(self.input_path) 
-                    if normalize else self.input_path
-                )
+                video = normalizar_video(self.input_path) if normalize else self.input_path
 
-                self.output_last_path = self.generate_output_path()
+                for i, (start, end) in enumerate(self.cuts, start=1):
+                    output = self.generate_output_path_multi(i)
 
-                # Executa o serviço de corte
-                cortar_video(
-                    video_para_cortar,
-                    start,
-                    end,
-                    self.output_last_path,
-                    reencode=reencode
-                )
+                    cortar_video(
+                        video,
+                        start,
+                        end,
+                        output,
+                        reencode=reencode
+                    )
 
+                self.output_last_path = output
                 self.after(0, self.finalizar_sucesso)
 
             except Exception as e:
                 self.after(0, lambda: self.finalizar_erro(str(e)))
 
-        threading.Thread(target=process_thread, daemon=True).start()
+        threading.Thread(target=process, daemon=True).start()
 
     # =============================
-    # Helpers e Finalização
+    # Controle UI
     # =============================
     def toggle_ui_state(self, state):
-        """Habilita ou desabilita botões críticos durante o processo"""
         self.btn_cut.configure(state=state)
         self.btn_select.configure(state=state)
-        self.entry_start.configure(state=state)
-        self.entry_end.configure(state=state)
 
+    # =============================
+    # Finalização sucesso
+    # =============================
     def finalizar_sucesso(self):
         self.progress_bar.stop()
         self.toggle_ui_state("normal")
 
-        self.label_status.configure(
-            text="Finalizado com sucesso!",
-            text_color="#2fa572"
-        )
+        self.label_status.configure(text="Finalizado!", text_color="#2fa572")
 
-        if messagebox.askyesno(
-            "Sucesso",
-            f"Vídeo salvo em:\n{self.output_last_path}\n\nDeseja abrir a pasta agora?"
-        ):
+        self.clear_cuts()
+
+        if messagebox.askyesno("Sucesso", "Deseja abrir a pasta?"):
             self.open_file_explorer()
 
-    def finalizar_erro(self, erro_msg):
+    # =============================
+    # Finalização erro
+    # =============================
+    def finalizar_erro(self, erro):
         self.progress_bar.stop()
         self.toggle_ui_state("normal")
 
-        self.label_status.configure(
-            text="Erro no processamento",
-            text_color="#e74c3c"
-        )
+        self.label_status.configure(text="Erro no processamento", text_color="red")
+        messagebox.showerror("Erro", "Falha ao processar vídeo")
+        print("Erro técnico:", erro)
 
-        # 🔹 Mensagem amigável ao usuário
-        messagebox.showerror(
-            "Erro",
-            "Falha ao processar o vídeo.\n\n"
-            "Dica: tente ativar o modo compatível (reencode ou normalização)."
-        )
-
-        # 🔹 Log técnico (console)
-        print("Erro detalhado:", erro_msg)
-
+    # =============================
+    # Abrir pasta
+    # =============================
     def open_file_explorer(self):
-        """Abre a pasta onde o vídeo foi salvo de forma cross-platform"""
-        path = os.path.abspath(os.path.dirname(self.output_last_path))
+        path = os.path.abspath("videos/cuts")
 
         if platform.system() == "Windows":
             os.startfile(path)
-        elif platform.system() == "Darwin":  # macOS
+        elif platform.system() == "Darwin":
             subprocess.run(["open", path])
-        else:  # Linux
+        else:
             subprocess.run(["xdg-open", path])
 
 
