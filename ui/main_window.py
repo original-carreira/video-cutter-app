@@ -5,6 +5,8 @@ import threading
 import os
 import time
 import json
+import sys
+import subprocess
 
 # =============================================================
 # 🛠️ FUNÇÕES UTILITÁRIAS
@@ -92,7 +94,7 @@ class MainWindow(ctk.CTk):
 
         # ⏱️ Tempo
         self.frame_time = ctk.CTkFrame(self)
-        self.frame_time.grid(row=2, padx=10, pady=5, sticky="ew")
+        self.frame_time.grid(row=4, padx=10, pady=5, sticky="ew")
 
         ctk.CTkLabel(self.frame_time, text="⏱️ Tempo do Corte", font=("Arial", 12, "bold")).pack()
 
@@ -173,6 +175,22 @@ class MainWindow(ctk.CTk):
         self.progress_bar = ctk.CTkProgressBar(self, mode="determinate")
         self.progress_bar.grid(row=11, sticky="ew", padx=20, pady=(0, 20))
         self.progress_bar.set(0.02)
+        
+        # 📺 Pré-visualização
+        self.frame_preview = ctk.CTkFrame(self)
+        self.frame_preview.grid(row=3, padx=10, pady=5, sticky="nsew")
+        ctk.CTkLabel(self.frame_preview, text="📺 Pré-visualização (OBS)", font=("Arial", 12, "bold")).pack(anchor="w", padx=10)
+        
+        # 🎥 Botão de Pré-visualização
+        self.btn_preview = ctk.CTkButton(
+            self.frame_preview,
+            text="▶️ Visualizar Vídeo",
+            command=self.preview_video,
+            fg_color="#2563eb",
+            hover_color="#1d4ed8"
+        )
+        self.btn_preview.pack(pady=10)
+
 
     # =============================================================
     # ⚙️ LÓGICA
@@ -187,8 +205,11 @@ class MainWindow(ctk.CTk):
         path = filedialog.askopenfilename()
         if path:
             self.input_path = path
-            self.label_file.configure(text=os.path.basename(path), text_color="white")
-
+            self.label_file.configure(
+                text=os.path.basename(path),
+                text_color="#16a34a"
+                )
+            
     def add_cut(self):
         start, end = self.entry_start.get().strip(), self.entry_end.get().strip()
 
@@ -317,17 +338,54 @@ class MainWindow(ctk.CTk):
                     self.after(0, lambda: self.label_file.configure(
                         text=os.path.basename(latest),
                         text_color="#16a34a"
-                    ))
+                    ))                   
+                                    
                     self.update_status("Vídeo importado com sucesso", 1)
                 else:
                     self.update_status("Arquivo não encontrado", 0)
 
             except Exception as e:
                 self.after(0, lambda: messagebox.showerror("Erro OBS", str(e)))
-
+                
         threading.Thread(target=task, daemon=True).start()
 
 
+    # =============================================================
+    #  🎬 CONTROLE DO PREVIEW
+    # =============================================================
+    
+    def preview_video(self):
+        if not self.input_path:
+            messagebox.showwarning("Aviso", "Nenhum vídeo selecionado.")
+            return
+        
+        try:
+            ffplay_path = "ffplay"
+
+            if getattr(sys, 'frozen', False):
+                base_path = os.path.dirname(sys.executable)
+                exe_path = os.path.join(base_path, "ffmpeg", "ffplay.exe")  # 🔥 ajuste aqui
+
+                if os.path.exists(exe_path):
+                    ffplay_path = exe_path
+
+            subprocess.Popen(
+                [
+                    ffplay_path,
+                    "-autoexit",
+                    "-window_title", "Preview",
+                    self.input_path
+                    ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+                )
+            
+            self.update_status("🎞️ Visualizando vídeo...", 0)
+
+        except Exception as e:
+            messagebox.showerror("Erro", f"Não foi possível abrir o vídeo:\n{e}")    
+
+    
 # =============================================================
 # 🚀 INICIALIZAÇÃO
 # =============================================================
