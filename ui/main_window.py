@@ -76,10 +76,11 @@ class MainWindow(ctk.CTk):
         self.frame_file.grid(row=1, padx=10, pady=5, sticky="ew")
 
         ctk.CTkLabel(self.frame_file, text="📂 Arquivo", font=("Arial", 12, "bold")).pack(anchor="w", padx=10)
-
+        
         self.btn_select = ctk.CTkButton(self.frame_file, text="Selecionar Vídeo", command=self.select_file)
         self.btn_select.pack(pady=5)
-
+        
+        # 🔥 Label para mostrar nome do arquivo selecionado 
         self.label_file = ctk.CTkLabel(self.frame_file, text="Nenhum arquivo selecionado", text_color="#1f2937")
         self.label_file.pack(pady=5)
 
@@ -92,10 +93,10 @@ class MainWindow(ctk.CTk):
         self.frame_inputs = ctk.CTkFrame(self.frame_time, fg_color="transparent")
         self.frame_inputs.pack(pady=5)
 
-        self.entry_start = ctk.CTkEntry(self.frame_inputs, placeholder_text="Início", width=140)
+        self.entry_start = ctk.CTkEntry(self.frame_inputs, placeholder_text="Início - HH:MM:SS", width=150)
         self.entry_start.pack(side="left", padx=5)
 
-        self.entry_end = ctk.CTkEntry(self.frame_inputs, placeholder_text="Fim", width=140)
+        self.entry_end = ctk.CTkEntry(self.frame_inputs, placeholder_text="Fim - HH:MM:SS", width=150)
         self.entry_end.pack(side="left", padx=5)
 
         # ⚙️ Opções
@@ -118,6 +119,7 @@ class MainWindow(ctk.CTk):
 
         self.text_cuts = ctk.CTkTextbox(self.frame_cuts)
         self.text_cuts.pack(fill="both", expand=True, padx=10, pady=5)
+        self.text_cuts.insert("end", "Nenhum corte adicionado\n")
 
         # 🎬 Ações
         self.frame_actions = ctk.CTkFrame(self)
@@ -142,12 +144,13 @@ class MainWindow(ctk.CTk):
         self.frame_obs_buttons.pack()
 
         self.btn_obs_start = ctk.CTkButton(self.frame_obs_buttons, text="🔴 Iniciar",
-                                          command=self.start_obs_recording)
+                                          command=self.start_obs_recording, 
+                                          fg_color="#d97706", hover_color="#156E49", state="normal")
         self.btn_obs_start.pack(side="left", padx=5)
 
         self.btn_obs_stop = ctk.CTkButton(self.frame_obs_buttons, text="⏹️ Parar",
                                          command=self.stop_obs_recording,
-                                         state="disabled")
+                                         fg_color="#991b1b", hover_color="#92400E", state="disabled")
         self.btn_obs_stop.pack(side="left", padx=5)
 
         # 📊 Status
@@ -178,9 +181,16 @@ class MainWindow(ctk.CTk):
         end = self.entry_end.get()
 
         if start and end:
+            # remove mensagem inicial se for o primeiro corte
+            if len(self.cuts) == 0:
+                self.text_cuts.delete("1.0", "end")
+                
             self.cuts.append((start, end))
-            self.text_cuts.insert("end", f"{start} → {end}\n")
-
+            self.text_cuts.insert("end", f"Corte {len(self.cuts)}: {start} → {end}\n")
+            
+            self.entry_start.delete(0, "end")
+            self.entry_end.delete(0, "end")
+            
             # 🔥 salva no histórico
             self.history.append({
                 "file": self.input_path,
@@ -193,6 +203,7 @@ class MainWindow(ctk.CTk):
     def clear_cuts(self):
         self.cuts.clear()
         self.text_cuts.delete("1.0", "end")
+        self.text_cuts.insert("end", "Nenhum corte adicionado ainda ...\n")
 
     # =============================================================
     # 🎞️ PROCESSAMENTO
