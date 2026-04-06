@@ -1,147 +1,118 @@
-# 🎬 Video Cutter App
+# 🎬 Video Cutter Pro + OBS
 
-## 1. Objetivo
-Aplicação para recorte de vídeos curtos (15–30s) para uso em apresentações.
+Aplicativo desktop em Python para corte de vídeos com múltiplos trechos, integração com OBS Studio e preview rápido via FFmpeg.
 
-## 2. Tecnologias
-- Python
-- FFmpeg
-- customtkinter
+---
 
-## 3. Estrutura
+## 🚀 Funcionalidades
 
-- ui → interface gráfica
-- services → regras de negócio
-- infra → execução do FFmpeg
-- utils → utilidades
+### ✂️ Corte de Vídeo
 
-## 4. Como executar
+* Múltiplos cortes por arquivo
+* Execução rápida via FFmpeg (copy ou reencode)
+* Nomes únicos de saída (sem sobrescrita)
+* Barra de progresso com feedback
 
-1. Instalar FFmpeg
-2. Rodar:
+### 🎥 Integração com OBS
 
+* Iniciar/parar gravação diretamente pelo app
+* Importação automática do vídeo gravado
+* Compatível com OBS WebSocket (porta 4455)
+
+### 🎬 Preview de Vídeo
+
+* Preview rápido usando **ffplay**
+* Compatível com qualquer formato suportado pelo FFmpeg
+* Não trava a interface
+
+### 📋 Gerenciamento de Cortes
+
+* Fila de cortes por sessão
+* Limpeza automática após execução
+* Interface clara e organizada
+
+### 📜 Histórico
+
+* Histórico persistente em JSON
+* Exibição dos últimos cortes realizados
+* Não interfere na execução atual
+
+---
+
+## 🧠 Arquitetura
+
+```text
+ui/
+ └── main_window.py
+
+services/
+ ├── video_cutter.py
+ ├── video_normalizer.py
+ └── obs_controller.py
+
+ffmpeg/
+ ├── ffmpeg.exe
+ └── ffplay.exe
+```
+
+---
+
+## ⚙️ Requisitos
+
+* Python 3.10+
+* FFmpeg (incluso no projeto)
+* OBS Studio com WebSocket habilitado
+
+---
+
+## ▶️ Execução (Desenvolvimento)
+
+```bash
 python main.py
+```
 
-## 5. Observações
+---
 
-- O modo "copy" é mais rápido, mas pode falhar em alguns vídeos.
-- O modo "reencode" é mais compatível.
+## 📦 Executável (.exe)
 
-## 6. Próximos passos
+Gerado com PyInstaller.
 
-- Normalização de vídeos
-- Suporte a múltiplos formatos
-- Integração com calendário
+* FFmpeg embutido
+* Logs em AppData
+* Funciona offline
 
+---
 
-## 7.Diferenças importantes no FFmpeg
+## 🛠️ Tecnologias
 
-### -ss antes vs depois do input
+* Python
+* CustomTkinter
+* FFmpeg / ffplay
+* OBS WebSocket
 
-- Antes do input → mais rápido, menos preciso
-- Depois do input → mais preciso, mais lento
+---
 
-### copy vs reencode
+## 📌 Versão Atual
 
-- copy → rápido, pode falhar em cortes exatos
-- reencode → mais lento, mais compatível
+**v1.7**
 
-### -map 0
+✔ Preview com ffplay
+✔ Integração OBS estável
+✔ Histórico persistente
+✔ UI refinada
+✔ Execução robusta com threading
 
-Inclui todas as trilhas do vídeo (áudio, legenda, etc.)
+---
 
-## 8.Tratamento de tempo
+## 🔜 Próximos Passos
 
-O sistema aceita:
+* Preview com tempo inicial (start)
+* Preview de trecho (start → end)
+* Validação de formato de tempo (HH:MM:SS)
+* Exportação avançada
 
-- HH:MM:SS
-- HH:MM:SS.ms
-- HH:MM:SS,ms
+---
 
-O tempo é convertido internamente para segundos (float), permitindo:
+## 📄 Licença
 
-- Comparações precisas
-- Validação de intervalo
-- Futuras operações (ex: múltiplos cortes)
-
-## 9.Validação de entrada
-
-O sistema valida:
-
-- Formato do tempo (HH:MM:SS)
-- Valores válidos (minutos e segundos)
-- Ordem lógica (tempo final maior que inicial)
-
-Essa validação evita erros no processamento com FFmpeg.
-
-## 10.Tratamento de streams
-
-- Uso de -map 0:v:0 para vídeo
-- Uso de -map 0:a:0? para áudio opcional
-- Evita erro em vídeos sem faixa de áudio
-
-## 11.Ajustes no comando FFmpeg
-
-- Uso de -map 0:v:0 e -map 0:a:0 para evitar streams incompatíveis
-- Uso de -y para evitar bloqueio ao sobrescrever arquivos
-- Remoção de -hwaccel por questões de compatibilidade
-
-## 12.Versionamento
-
-O projeto utiliza Git com versionamento semântico.
-
-Versões:
-
-- v1.0: corte funcional com FFmpeg
-- próximas versões incluirão normalização e integração
-
-## 13.Normalização de vídeo
-
-Foi implementado um processo de normalização que converte qualquer vídeo para:
-
-- MP4
-- H264 (vídeo)
-- AAC (áudio)
-
-Isso garante compatibilidade com o sistema de corte e com o PowerPoint.
-
-## 14.Normalização inteligente
-
-- Evita reprocessamento de vídeos já normalizados
-- Mantém padrão MP4 (H264 + AAC)
-- Aplica otimizações de reprodução (faststart)
-- Normaliza áudio automaticamente (loudnorm)
-
-## 15.Pipeline de processamento
-
-O sistema gera dois arquivos:
-
-1. Vídeo normalizado (completo)
-2. Vídeo recortado
-
-Isso permite reutilização do vídeo normalizado para múltiplos cortes,
-evitando reprocessamento.
-
-- Arquivos normalizados são armazenados em `videos/normalized/`
-- O sistema evita reprocessamento de vídeos já normalizados
-
-## 16.Modos de operação
-
-O sistema possui dois modos:
-
-- Modo rápido: realiza apenas o corte direto
-- Modo compatível: normaliza o vídeo antes do corte
-
-O modo compatível é recomendado para vídeos com problemas de codec ou origem diversa.
-
-## Versão 1.2
-
-- Implementação de modos de operação:
-  - Modo rápido (corte direto)
-  - Modo compatível (normalização + corte)
-- Organização dos arquivos de saída em `videos/cuts`
-- Melhor controle de desempenho pelo usuário
-
-## 17.Execução assíncrona
-
-O processamento de vídeo é executado em thread separada, garantindo que a interface permaneça responsiva durante operações longas.
+Uso pessoal / estudo
